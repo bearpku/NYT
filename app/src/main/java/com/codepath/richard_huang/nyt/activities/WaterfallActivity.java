@@ -1,28 +1,27 @@
 package com.codepath.richard_huang.nyt.activities;
 
+import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 
+import com.codepath.richard_huang.nyt.R;
 import com.codepath.richard_huang.nyt.adapters.ArticleAdapter;
 import com.codepath.richard_huang.nyt.adapters.ArticleItemClickListener;
 import com.codepath.richard_huang.nyt.fragments.FilterFragment;
 import com.codepath.richard_huang.nyt.models.Article;
-import com.codepath.richard_huang.nyt.R;
-import com.codepath.richard_huang.nyt.utils.ArticleWebViewClient;
 import com.codepath.richard_huang.nyt.utils.AutoPaginationListener;
 import com.codepath.richard_huang.nyt.utils.Utils;
 
@@ -87,15 +86,10 @@ public class WaterfallActivity extends AppCompatActivity {
             @Override
             public void onItemClick(View itemView, int position) {
                 Article article = articles.get(position);
-                webView = (WebView) findViewById(R.id.webview);
-                webView.setVisibility(View.VISIBLE);
-                webView.getSettings().setLoadsImagesAutomatically(true);
-                webView.getSettings().setJavaScriptEnabled(true);
-                webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-                webView.setWebViewClient(new ArticleWebViewClient());
-                webView.loadUrl(article.getWebUrl());
-                webView.getSettings().setUseWideViewPort(true);
-                webView.getSettings().setLoadWithOverviewMode(true);
+
+                Intent intent = new Intent(WaterfallActivity.this, WebViewActivity.class);
+                intent.putExtra("web_url", article.getWebUrl());
+                startActivity(intent);
             }
         });
 
@@ -141,12 +135,8 @@ public class WaterfallActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.search_text) {
             return true;
         } else if (id == R.id.search_filter) {
@@ -174,14 +164,5 @@ public class WaterfallActivity extends AppCompatActivity {
                     .toString();
         }
 //        handler.postDelayed(getSearchArticles(new SearchQuery(prevQuery, fq, order, begin_date), true)  , 500);
-    }
-
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            webView.setVisibility(View.INVISIBLE);
-            return true;
-        }
-
-        return false;
     }
 }
