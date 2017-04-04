@@ -1,9 +1,7 @@
 package com.codepath.richard_huang.nyt.adapters;
 
 import android.content.Context;
-import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +9,6 @@ import android.view.ViewGroup;
 import com.codepath.richard_huang.nyt.R;
 import com.codepath.richard_huang.nyt.models.Article;
 import com.codepath.richard_huang.nyt.utils.Utils;
-import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -39,6 +36,9 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleViewHolder> {
         return context;
     }
 
+    public void addItem(Article article) {
+        articles.add(article);
+    }
 
     @Override
     public int getItemCount() {

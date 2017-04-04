@@ -2,9 +2,6 @@ package com.codepath.richard_huang.nyt.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -15,7 +12,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.WebView;
 
 import com.codepath.richard_huang.nyt.R;
 import com.codepath.richard_huang.nyt.adapters.ArticleAdapter;
@@ -24,6 +20,7 @@ import com.codepath.richard_huang.nyt.fragments.FilterFragment;
 import com.codepath.richard_huang.nyt.models.Article;
 import com.codepath.richard_huang.nyt.utils.AutoPaginationListener;
 import com.codepath.richard_huang.nyt.utils.Utils;
+import com.loopj.android.http.RequestParams;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,32 +30,15 @@ import java.util.List;
  * Created by richard_huang on 4/3/17.
  */
 
-public class WaterfallActivity extends AppCompatActivity {
+public class WaterfallActivity extends AppCompatActivity implements FilterFragment.EditFilterListener {
     private List<Article> articles;
     private ArticleAdapter articleAdapter;
     private RecyclerView recyclerView;
-    private HandlerThread handlerThread;
-    private Handler handler;
-    private WebView webView;
     private String beginDate;
     private AutoPaginationListener scrollListener;
-    private String prevQuery = "";
     private String sort = "Newest";
     private boolean arts = false, fashion = false, sports = false;
-
-//    private Runnable getSearchArticles(final SearchQuery query, final boolean isNewSearch) {
-//        Runnable runnable = new Runnable() {
-//            @Override
-//            public void run() {
-//                loadArticles(query, isNewSearch);
-//            }
-//        };
-//        return runnable;
-//    }
-//
-//    private void loadNextDataFromApi(int page) {
-//        handler.postDelayed(getSearchArticles(new SearchQuery(prevQuery), false), 500);
-//    }
+    private RequestParams queryParams = new RequestParams();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +48,7 @@ public class WaterfallActivity extends AppCompatActivity {
         // load initial data
         articles = new ArrayList<>();
         articleAdapter = new ArticleAdapter(this, articles);
-        Utils.fetchArticles(articles, articleAdapter);
+        Utils.fetchArticles(queryParams, articleAdapter);
 
         recyclerView = (RecyclerView) findViewById(R.id.articlesView);
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
@@ -77,7 +57,8 @@ public class WaterfallActivity extends AppCompatActivity {
         scrollListener = new AutoPaginationListener(layoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-//                loadNextPage(page);
+                queryParams.put("page", page + "");
+                Utils.fetchArticles(queryParams, articleAdapter);
             }
         };
         recyclerView.addOnScrollListener(scrollListener);
@@ -98,10 +79,6 @@ public class WaterfallActivity extends AppCompatActivity {
         toolbar.setTitleTextColor(getResources().getColor(R.color.colorWhite));
         setSupportActionBar(toolbar);
 
-        handlerThread = new HandlerThread("RequestHandler");
-        handlerThread.start();
-        handler = new Handler(Looper.getMainLooper());
-
         Calendar c = Calendar.getInstance();
         String mm = Integer.toString(c.get(Calendar.MONTH));
         String dd = Integer.toString(c.get(Calendar.DAY_OF_MONTH));
@@ -116,20 +93,20 @@ public class WaterfallActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         MenuItem searchItem = menu.findItem(R.id.search_text);
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-//        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-//            @Override
-//            public boolean onQueryTextSubmit(String query) {
-//                prevQuery = query;
-//                handler.postDelayed(getSearchArticles(new SearchQuery(prevQuery), true), 500);
-//
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onQueryTextChange(String newText) {
-//                return false;
-//            }
-//        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                queryParams.remove("page");
+                queryParams.put("q", query);
+                Utils.fetchArticles(queryParams, articleAdapter);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -147,22 +124,33 @@ public class WaterfallActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void onSaveEdit(String order, String begin_date, boolean arts, boolean fashion, boolean sports) {
+    public void onSaveEdit(String order, String beginDate, boolean arts, boolean fashion, boolean sports) {
         sort = order;
-        this.beginDate = begin_date;
+        this.beginDate = beginDate;
         this.arts = arts;
         this.fashion = fashion;
         this.sports = sports;
-        String fq = "";
+
         StringBuilder sb = new StringBuilder();
-        if (arts || fashion || sports) {
-            fq = sb.append("news_desk:(")
-                    .append(arts ? "\"Arts\"" : "")
-                    .append(fashion ? "\"Fashion &amp; Style\" " : "")
-                    .append(sports ? "\"Sports\" " : "")
-                    .append(")")
-                    .toString();
+        sb.append("news_desk:(");
+        if (arts) {
+            sb.append("\"Arts\" ");
         }
-//        handler.postDelayed(getSearchArticles(new SearchQuery(prevQuery, fq, order, begin_date), true)  , 500);
+        if (fashion) {
+            sb.append("\"Fashion &amp; Style\" ");
+        }
+        if (sports) {
+            sb.append("\"Sports\" ");
+        }
+        sb.append(")");
+
+        queryParams.put("begin_date", beginDate);
+        queryParams.put("sort", order);
+        if (sb.length() > 2) {
+            queryParams.put("fq", sb.toString());
+        } else {
+            queryParams.remove("fq");
+        }
+        Utils.fetchArticles(queryParams, articleAdapter);
     }
 }

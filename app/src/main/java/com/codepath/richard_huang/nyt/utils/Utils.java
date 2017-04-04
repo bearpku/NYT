@@ -14,7 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
+import java.util.Date;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -23,12 +23,19 @@ import cz.msebera.android.httpclient.Header;
  */
 
 public class Utils {
+    private static Date lastFetch = null;
+    public static void fetchArticles(RequestParams params, final ArticleAdapter articleAdapter) {
+        if (lastFetch != null && new Date().getTime() - lastFetch.getTime() < 1000) {
+            return;
+        }
 
-    public static void fetchArticles(final List<Article> articles, final ArticleAdapter articleAdapter) {
+        lastFetch = new Date();
+
         AsyncHttpClient client = new AsyncHttpClient();
-        RequestParams params = new RequestParams("api-key", Constants.API_KEY);
-
         final Gson gson = new GsonBuilder().create();
+
+        params.put("api-key", Constants.API_KEY);
+        Log.d("params", params.toString());
 
         client.get(Constants.BASE_API_URL, params, new JsonHttpResponseHandler() {
 
@@ -43,7 +50,8 @@ public class Utils {
                     JSONArray articlesJson = response.getJSONObject("response").getJSONArray("docs");
                     for (int i = 0; i < articlesJson.length(); i++) {
                         JSONObject articleJson = articlesJson.getJSONObject(i);
-                        articles.add(gson.fromJson(articleJson.toString(), Article.class));
+                        Article article = gson.fromJson(articleJson.toString(), Article.class);
+                        articleAdapter.addItem(article);
                     }
                     articleAdapter.notifyDataSetChanged();
                 } catch (JSONException e) {

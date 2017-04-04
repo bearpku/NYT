@@ -34,6 +34,7 @@ public class FilterFragment extends DialogFragment implements Button.OnClickList
     private static String order;
     private CheckBox arts, fashion, sports;
     private String[] sortOrder = {"Newest", "Oldest"};
+
     public static FilterFragment newInstance(String date, String sort, boolean arts, boolean fashion, boolean sports) {
         FilterFragment fragment = new FilterFragment();
         year = Integer.parseInt(date.substring(0, 4));
@@ -45,9 +46,11 @@ public class FilterFragment extends DialogFragment implements Button.OnClickList
         order = sort;
         return fragment;
     }
+
     public interface EditFilterListener {
         void onSaveEdit(String order, String date, boolean arts, boolean fashion, boolean sports);
     }
+
     @Override
     public void onClick(View v) {
         EditFilterListener listener = (EditFilterListener) getActivity();
@@ -66,12 +69,14 @@ public class FilterFragment extends DialogFragment implements Button.OnClickList
                 sports.isChecked());
         dismiss();
     }
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.edit_search_filter, container, false);
     }
+
     @Override
     public void onViewCreated(View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -108,6 +113,7 @@ public class FilterFragment extends DialogFragment implements Button.OnClickList
         fashion.setChecked(fashionChecked);
         orderSpinner.setSelection(Arrays.asList(sortOrder).indexOf(order));
     }
+
     public void onResume() {
         Window window = getDialog().getWindow();
         Point size = new Point();
